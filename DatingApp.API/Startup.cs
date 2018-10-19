@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using DatingApp.API.Data;
+using DatingApp.API.Helpers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -55,6 +59,25 @@ namespace DatingApp.API
             }
             else
             {
+                //custom configuration for the exception in production mode. 
+                 app.UseExceptionHandler(builder => {
+                     builder.Run( async context => {
+                         //setting the status code for response in case of exception
+                         context.Response.StatusCode = (int)HttpStatusCode.InternalServerError; 
+                         //context.Response.StatusCode = 401;
+
+                         //get the error object based on feature asked.
+                         var error = context.Features.Get<IExceptionHandlerFeature>();
+                         
+                         if(error != null){
+                             //Writes the response to the client. 
+                             context.Response.AddApplicationError(error.Error.Message);
+                             //await context.Response.WriteAsync(error.Error.Message);
+                             await context.Response.WriteAsync("Kuch to locha hai");
+                         }
+                     });
+                 });
+                
                 // app.UseHsts();
             }
 
